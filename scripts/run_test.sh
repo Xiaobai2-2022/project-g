@@ -35,7 +35,9 @@ compiled="../compiled"
 compiled_result="$compiled/compiled_result"
 compile_err_file="$compiled/cp_res.txt"
 test_folder="../tests"
+test_in_folder="$test_folder/inputs"
 test_out_folder="$test_folder/outputs"
+test_out_act_folder="$test_folder/outputs-actual"
 manual_test_out="$test_folder/manual_outputs"
 
 # Variables Defined Here
@@ -63,7 +65,7 @@ g++ -o "$compiled_result" "$source"/*.cpp 2> "$compile_err_file"
 
 # Check for any compilation errors complain if found then terminate
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}Compile Done...${NC}"
+    echo -e "${GREEN}Compile Finished...${NC}\n\n\n"
 else
     echo -e "${RED}Error 902: \n${YELLOW}A build Error is found, there is an error in compilation, see \"..\\\\compiled\\\\cp_res.txt\" for more info. \n${RED}Testing Terminated...${NC}"
     exit 1
@@ -73,53 +75,54 @@ fi
 echo -ne "${YELLOW}Proceed with automatic testing(y/N):${NC} " 
 read test_with_auto
 
+if [ -d "$test_out_act_folder" ]; then
+    rm -r "$test_out_act_folder"
+fi
+mkdir $test_out_act_folder
+
 # Test with auto if yes is inputed
 if [ "${test_with_auto,,}" = "y" ]; then 
 
-    echo -e "${GREEN}Proceed with auto testing.${NC}" 
+    echo -e "${GREEN}Proceed with auto testing.${NC}\n\n\n" 
 
-    if [ ! -n "$(find "$test_folder" -maxdepth 1 -type f -name '*.in')" ]; then
+    if [ ! -n "$(find "$test_in_folder" -maxdepth 1 -type f -name '*.in')" ]; then
         echo -e "${RED}Error 921: \n${YELLOW}A test Error is found, can not find any test files that ends with \"*.in\". \n${RED}Testing Terminated...${NC}"
         rm -r "$compiled"
         exit 1
     fi
 
-    if [ -d $test_out_folder ]; then
-        rm -r "$test_out_folder"
-    fi
-    if [ -d $manual_test_out ]; then
-        rm -r "$manual_test_out"
-    fi
-
-    mkdir "$test_out_folder"
-
-    for input_file in "$test_folder"/*.in; do
+    for input_file in "$test_in_folder"/*.in; do
 
         # Extract file without the .in extension
         filename=$(basename "$input_file")
-        f_in_name="${filename%.*}"
-        f_out_name="$f_in_name.out"
-
-        echo -e "${GREEN}Testing $f_in_name.in, Generating $f_out_name...${NC}"
+        f_name="${filename%.*}"
+        f_in_name="$f_name.in"
+        f_out_name="$f_name.out"
 
         # Generate the .out file
-        ./"$compiled_result" --quite < "$input_file" > "$test_folder/outputs/$f_out_name"
+        echo -e "${GREEN}Testing $f_in_name, Generating $f_out_name...${NC}"
+        ./"$compiled_result" --quite < "$input_file" > "$test_out_act_folder/$f_out_name"
+
+        # Comparing the two .out files
+        echo -e "${GREEN}Comparing $f_out_name in outputs and outputs-actual...${NC}"
+        if cmp -s "$test_out_act_folder/$f_out_name" "$test_out_folder/$f_out_name"; then
+            echo -e "${GREEN}f_name passed!${NC}\n"
+        else
+            echo -e "${RED}Error 922: \n${YELLOW}A test Error is found, test \"$f_name\" failed. \n${RED}Testing will continue...${NC}\n"
+        fi
         
     done
+
+    echo -e "\n\n"
 
 # Test with manual setup
 else
 
     echo -e "${GREEN}Proceed with manual testing.${NC}" 
-
-    if [ -d $test_out_folder ]; then
-        rm -r "$test_out_folder"
-    fi
-
     ./"$compiled_result"
 
 fi
 
 # Delete the compiled result at the end
-echo -e "${GREEN}Testing Done, terminates.${NC}"
+echo -e "${GREEN}Testing Done, Terminates.${NC}"
 rm -r "$compiled"
