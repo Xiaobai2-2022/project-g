@@ -2,7 +2,7 @@
 # Auto Testing Software for Project-G #
 # Designed for Development of Game    #
 # By Zhifan (Xiaobai) Li              #
-# Version 0.0.1                       #
+# Version 0.0.2                       #
 #######################################
 
 #######################################
@@ -36,6 +36,7 @@ compiled_result="$compiled/compiled_result"
 compile_err_file="$compiled/cp_res.txt"
 test_folder="../tests"
 test_out_folder="$test_folder/outputs"
+manual_test_out="$test_folder/manual_outputs"
 
 # Variables Defined Here
 test_with_auto=y
@@ -72,8 +73,11 @@ fi
 echo -ne "${YELLOW}Proceed with automatic testing(y/N):${NC} " 
 read test_with_auto
 
-# Tes with auto if yes is inputed
+# Test with auto if yes is inputed
 if [ "${test_with_auto,,}" = "y" ]; then 
+
+    echo -e "${GREEN}Proceed with auto testing.${NC}" 
+
     if [ ! -n "$(find "$test_folder" -maxdepth 1 -type f -name '*.in')" ]; then
         echo -e "${RED}Error 921: \n${YELLOW}A test Error is found, can not find any test files that ends with \"*.in\". \n${RED}Testing Terminated...${NC}"
         rm -r "$compiled"
@@ -82,6 +86,9 @@ if [ "${test_with_auto,,}" = "y" ]; then
 
     if [ -d $test_out_folder ]; then
         rm -r "$test_out_folder"
+    fi
+    if [ -d $manual_test_out ]; then
+        rm -r "$manual_test_out"
     fi
 
     mkdir "$test_out_folder"
@@ -99,8 +106,19 @@ if [ "${test_with_auto,,}" = "y" ]; then
         ./"$compiled_result" --quite < "$input_file" > "$test_folder/outputs/$f_out_name"
         
     done
-fi
 
+# Test with manual setup
+else
+
+    echo -e "${GREEN}Proceed with manual testing.${NC}" 
+
+    if [ -d $test_out_folder ]; then
+        rm -r "$test_out_folder"
+    fi
+
+    ./"$compiled_result"
+
+fi
 
 # Delete the compiled result at the end
 echo -e "${GREEN}Testing Done, terminates.${NC}"
