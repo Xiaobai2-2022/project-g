@@ -2,7 +2,7 @@
 # Auto Testing Software for Project-G #
 # Designed for Development of Game    #
 # By Zhifan (Xiaobai) Li              #
-# Version 0.0.2                       #
+# Version 0.0.3                       #
 #######################################
 
 #######################################
@@ -59,9 +59,18 @@ fi
 
 mkdir "$compiled"
 
-# Compile all C++ code files
-echo -e "${GREEN}Folder src gripped, compiles all file in src...${NC}"
-g++ -o "$compiled_result" "$source"/*.cpp 2> "$compile_err_file"
+# Prompt user for testing method
+echo -ne "${YELLOW}Proceed with SFML compile.(y/N):${NC}" 
+read compl_sfml
+
+if [ "${test_with_auto,,}" = "y" ]; then 
+    echo -e "${GREEN}Folder src gripped, compiles all file in src...${NC}"
+    g++ -o "$compiled_result" "$source"/*.cpp -lsfml-graphics -lsfml-window -lsfml-system 2> "$compile_err_file"
+else
+    # Compile all C++ code files
+    echo -e "${GREEN}Folder src gripped, compiles all file in src...${NC}"
+    g++ -o "$compiled_result" "$source"/*.cpp 2> "$compile_err_file"
+fi
 
 # Check for any compilation errors complain if found then terminate
 if [ $? -eq 0 ]; then
